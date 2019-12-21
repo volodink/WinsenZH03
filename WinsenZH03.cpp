@@ -34,7 +34,6 @@
 
 #include "WinsenZH03.h"
 
-
 WinsenZH03::WinsenZH03()
 {
 	_s = NULL;
@@ -48,11 +47,12 @@ void WinsenZH03::begin(Stream *ser)
 
 void WinsenZH03::setAs(bool active)
 {
-	byte setConfig[] = { 0xFF, 0x01, 0x78, 0x41, 0x00, 0x00, 0x00, 0x00, 0x46 };//QA config
-	byte response[9] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	byte setConfig[] = {0xFF, 0x01, 0x78, 0x41, 0x00, 0x00, 0x00, 0x00, 0x46}; //QA config
+	byte response[9] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-	if (active) {
-		setConfig[3] = 0x40;//Continus config
+	if (active)
+	{
+		setConfig[3] = 0x40; //Continus config
 		setConfig[8] = 0x47;
 #ifdef DEBUGOTHERS
 		Serial.println(F("Continus mode"));
@@ -65,26 +65,29 @@ void WinsenZH03::setAs(bool active)
 	}
 #endif
 	_s->write(setConfig, sizeof(setConfig));
-		// Wait for the response
+	// Wait for the response
 	delay(1500);
-	while (_s->available() > 0) {
-		byte c = _s->read();//Clear 
-		//Serial.print(c);
+	while (_s->available() > 0)
+	{
+		byte c = _s->read(); //Clear
+							 //Serial.print(c);
 	}
 }
 
 void WinsenZH03::readContinus()
 {
-	if (_s->find(0x42)) {    //start to read when detect 0x42
-
+	if (_s->find(0x42))
+	{ //start to read when detect 0x42
 
 		_s->readBytes(buf, BYTESCOUNT);
 
-		if (buf[0] == 0x4d) {
+		if (buf[0] == 0x4d)
+		{
 #ifdef DEBUGBYTES
 			for (int i = 0; i < BYTESCOUNT; i++)
 			{
-				Serial.print(buf[i], HEX); Serial.print(" ");
+				Serial.print(buf[i], HEX);
+				Serial.print(" ");
 			}
 			Serial.print("\r\n");
 #endif
@@ -94,8 +97,6 @@ void WinsenZH03::readContinus()
 				this->PM2_5 = (buf[4] << 8) + buf[5];
 				this->PM10 = (buf[6] << 8) + buf[7];
 			}
-			
-
 		}
 	}
 }
@@ -103,17 +104,18 @@ void WinsenZH03::readContinus()
 int WinsenZH03::readOnce()
 {
 	int once_flag = 0;
-	static byte petitionn[] = { 0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79 };// Petition to get a single result
-	static byte measure[8] = { 0x00,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };// Space for the response	
+	static byte petitionn[] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79}; // Petition to get a single result
+	static byte measure[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};		  // Space for the response
 	_s->write(petitionn, sizeof(petitionn));
 	delay(1500);
 	// read
 
-	if (_s->available() > 0) {
+	if (_s->available() > 0)
+	{
 		_s->readBytes(measure, 9);
 	}
 
-	#ifdef DEBUGBYTES
+#ifdef DEBUGBYTES
 
 	for (int i = 0; i < 9; i++)
 	{
@@ -121,10 +123,9 @@ int WinsenZH03::readOnce()
 		Serial.print(" ");
 		Serial.print(measure[i], HEX);
 		//Serial.print("|");
-
 	}
 
-	#endif
+#endif
 
 	if (measure[1] == 0x86)
 	{
@@ -147,8 +148,6 @@ int WinsenZH03::readOnce()
 			once_flag = 0;
 		}
 
-
-
 #ifdef DEBUGOTHERS
 		Serial.print(F("PM1_0:"));
 		Serial.print(PM1_0);
@@ -157,35 +156,31 @@ int WinsenZH03::readOnce()
 		Serial.print(F(" PM10:"));
 		Serial.println(PM10);
 #endif
-
 	}
 	delay(100);
 	return once_flag;
-	}
-
+}
 
 int WinsenZH03::checkValueCon(unsigned char *thebuf, char leng)
 {
 	int receiveflag = 0;
 	int receiveSum = 0;
 
-	for (int i = 0; i < (leng - 2); i++) {
+	for (int i = 0; i < (leng - 2); i++)
+	{
 		receiveSum = receiveSum + thebuf[i];
 	}
 	receiveSum = receiveSum + 0x42;
 
-	if (receiveSum == ((thebuf[leng - 2] << 8) + thebuf[leng - 1]))  //check the serial data 
+	if (receiveSum == ((thebuf[leng - 2] << 8) + thebuf[leng - 1])) //check the serial data
 	{
 #ifdef DEBUGBYTES
 		Serial.println(F("Check continuous ok"));
 #endif
 
-
 		receiveSum = 0;
 		receiveflag = 1;
 	}
-	
-
 
 	return receiveflag;
 }
@@ -195,7 +190,8 @@ int WinsenZH03::checkValueMan(unsigned char *thebuf)
 	int receiveflag = 0;
 	int receiveSum = 0;
 
-	for (int i = 1; i < 8; i++) {
+	for (int i = 1; i < 8; i++)
+	{
 		receiveSum = receiveSum + thebuf[i];
 		//Serial.print(thebuf[i],HEX); Serial.print(" ");
 	}
@@ -204,7 +200,7 @@ int WinsenZH03::checkValueMan(unsigned char *thebuf)
 	Serial.print(F("<->"));
 	Serial.println(thebuf[8], HEX);
 #endif
-	if (((byte)(~receiveSum + 1)) == thebuf[8])  //check the serial data 
+	if (((byte)(~receiveSum + 1)) == thebuf[8]) //check the serial data
 	{
 #ifdef DEBUGOTHERS
 		Serial.println("F(Check manual ok"));
@@ -234,43 +230,44 @@ float WinsenZH03::readPM2_5()
 float WinsenZH03::readPM10()
 {
 	//int PM10Val;
-	//PM10Val = (measure[6] << 8) + measure[7]; //count PM10 value of the air detector module  
+	//PM10Val = (measure[6] << 8) + measure[7]; //count PM10 value of the air detector module
 	//return PM10Val;
 	return this->PM10;
 }
 
-
 int WinsenZH03::sleep()
 {
-	
-		byte setSleep[] = { 0xFF, 0x01, 0xA7, 0x01, 0x00, 0x00, 0x00, 0x00, 0x57};//duerme
-		_s->write(setSleep, sizeof(setSleep));
-		return slewarespo();
-	}
-	
+
+	byte setSleep[] = {0xFF, 0x01, 0xA7, 0x01, 0x00, 0x00, 0x00, 0x00, 0x57}; //duerme
+	_s->write(setSleep, sizeof(setSleep));
+	return slewarespo();
+}
+
 int WinsenZH03::wake()
 {
-	
-		byte setWake[] = { 0xFF, 0x01, 0xA7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58};//despierta
-		_s->write(setWake, sizeof(setWake));
-		return slewarespo();
-	}
-	
+
+	byte setWake[] = {0xFF, 0x01, 0xA7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58}; //despierta
+	_s->write(setWake, sizeof(setWake));
+	return slewarespo();
+}
+
 int WinsenZH03::slewarespo()
 {
 	byte c;
-			byte response[9] = { 0xFF, 0xA7, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58 };	
-				delay(1500);
-				while (_s->available() > 0) {
-			c = _s->read();//Clear 
-		}
-				if (c==response){
-			
-			return 1;
-		}else{
-			return 0;
-		}
-		
-		
+	byte response[9] = {0xFF, 0xA7, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58};
+	byte measure[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Space for the response
+	delay(1500);
+	if (_s->available() > 0)
+	{
+		_s->readBytes(measure, 9);
 	}
-	
+
+	if (memcmp(a, b, sizeof(a)) == 0)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
