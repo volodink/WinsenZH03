@@ -253,16 +253,17 @@ int WinsenZH03::wake()
 
 int WinsenZH03::slewarespo()
 {
-	byte c;
 	byte response[9] = {0xFF, 0xA7, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58};
-	byte measure[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Space for the response
+	byte measure[9] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Space for the response
+
 	delay(1500);
+
 	if (_s->available() > 0)
 	{
 		_s->readBytes(measure, 9);
 	}
 
-	if (memcmp(a, b, sizeof(a)) == 0)
+	if (memcmp(response, measure, sizeof(measure)) == 0)
 	{
 		return 0;
 	}
